@@ -65,7 +65,7 @@ def reconfigure_cb(config, level):
     return currentCfg
 
 # Initializing our ping device and checking to make sure it initialized correctly
-myPing = Ping1D("/dev/ttyUSB0", 115200)
+myPing = Ping1D("/dev/ptmx", 115200)
 if myPing.initialize() is False:
 
     print("Failed to initialize Ping! This probably means that it couldn't find the correct serial port or something similar.")
