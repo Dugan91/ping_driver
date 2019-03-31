@@ -8,49 +8,49 @@ from ping_driver.msg import pingMessage # Imports the custom message that we use
 from dynamic_reconfigure.server import Server
 from ping_driver.cfg import PingDriverConfig
 
-currentCfg = PingDriverConfig()
+currentCfg = dict()
 
 #TODO: Load default values from a config file or something
-currentCfg.ping_enabled = False
-currentCfg.ping_frequency = 10
-currentCfg.speed_of_sound = 1498
-currentCfg.auto = True
-currentCfg.scan_start = 0
-currentCfg.scan_length = 10
-currentCfg.gain = 0
+currentCfg['ping_enabled'] = False
+currentCfg['ping_frequency'] = 10
+currentCfg['speed_of_sound'] = 1498
+currentCfg['auto'] = True
+currentCfg['scan_start'] = 0
+currentCfg['scan_length'] = 10
+currentCfg['gain'] = 0
 
 # Callback for Dynamic Reconfigure
 #TODO: Might need to validate requested parameter changes
 def reconfigure_cb(config, level):    
-    if (currentCfg.ping_enabled != config.ping_enabled):
+    if (currentCfg['ping_enabled'] != config.ping_enabled):
         if not myPing.set_ping_enable(config.ping_enabled):
             print("Failed to set Ping Enable. Exiting...")
             exit(-1)
-        currentCfg.ping_enabled = config.ping_enabled
+        currentCfg['ping_enabled'] = config.ping_enabled
 
-    if (currentCfg.ping_frequency != config.ping_frequency):
+    if (currentCfg['ping_frequency'] != config.ping_frequency):
         interval = 1000.0 / config.ping_frequency # Convert to ms interval
         if not myPing.set_ping_interval(interval):
             print("Failed to set Ping Interval. Exiting...")
             exit(-1)
-        currentCfg.ping_frequency = config.ping_frequency
+        currentCfg['ping_frequency'] = config.ping_frequency
 
-    if (currentCfg.speed_of_sound != config.speed_of_sound):
+    if (currentCfg['speed_of_sound'] != config.speed_of_sound):
         sos = config.speed_of_sound * 1000 # Convert to mm/s
         if not myPing.set_speed_of_sound(sos):
             print("Failed to set Speed of Sound. Exiting...")
             exit(-1)
-        currentCfg.speed_of_sound = config.speed_of_sound
+        currentCfg['speed_of_sound'] = config.speed_of_sound
 
-    if (currentCfg.auto != config.auto):
+    if (currentCfg['auto'] != config.auto):
         if not myPing.set_mode_auto(1 if config.auto else 0):
             print("Failed to set Mode. Exiting...")
             exit(-1)
-        currentCfg.auto = config.auto
+        currentCfg['auto'] = config.auto
 
     # Can only change Scan Range and Gain if not in auto mode
-    if not currentCfg.auto:
-        if (currentCfg.scan_start != config.scan_start or currentCfg.scan_length != config.scan_length):
+    if not currentCfg['auto']:
+        if (currentCfg['scan_start'] != config.scan_start or currentCfg['scan_length'] != config.scan_length):
             if not myPing.set_range(config.scan_start, config.scan_length):
                 print("Failed to set Scan Range. Exiting...")
                 exit(-1)
