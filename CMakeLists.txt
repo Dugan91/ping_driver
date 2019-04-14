@@ -27,7 +27,7 @@ catkin_package()
 catkin_install_python(programs scripts/pingDriver.py
                       DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-#add_dependencies(ping_driver ${${PROJECT_NAME}_EXPORTED_TARGETS})
+# add_dependencies(ping_driver ${${PROJECT_NAME}_EXPORTED_TARGETS})
 
 
 

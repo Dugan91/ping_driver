@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# To Install Dependencies: 
+# pip install -r /path/to/requirements.txt -f /path/to/containing/folder
+
 # Adding certain modules to PYTHONPATH so that they can be correctly imported directly afterward
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/msg")
@@ -11,7 +14,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 for path in sys.path:
     print(path)
 # Imports
-from brping import Ping1D # Imports Blue Robotics's Python library for interfacing with the Ping 
+from brping import Ping1D # Imports Blue Robotics's Python librarqy for interfacing with the Ping 
 import rospy # Python version of ROS 
 from ping_driver.msg import pingMessage # Imports the custom message that we use
 
@@ -26,28 +29,21 @@ import time # Allows us to dictate interval between fake data publishing
 import pty # Allows us to set up a terminal that serves as a fake Ping, basically
 from serial import Serial # Allows us to simulate fake data on a specific serial port
 
-# I'd normally do this using currentCfg = PingDriverConfig() but python's yelling at me that it can't use a module like that
-# So, this implements basically the same thing - A cache of the current value so dynamic reconfigure can tell if it needs to change something 
-currentCfg = {
-    "ping_enabled": False,
-    "ping_frequency": 10, 
-    "speed_of_sound": 1498, 
-    "auto": True,
-    "gain": 0,
-    "scan_start": 0,
-    "scan_length": 10
-}
-
 # Tracks whether we're reading from a fake stream or from the real ping 
 # Ideally, you can change only this value and the entire class's behavior will responsively change 
-readingFromFakeStream = True
+# TODO: Make this a launch file 
+readingFromFakeStream = False
 
 # Used to communicate across threads
 # # This is NOT thread safe, but doesn't need to be 
 cachedFakeDistance = 0
 cachedFakeConfidence = 0
 
-# Setting default config parameters 
+#TODO: Figure out how to load default values from a config or launch file 
+currentCfg = dict()
+currentCfg['ping_enabled'] = False
+currentCfg['ping_frequency'] = 10
+currentCfg['speed_of_sound'] = 1498
 currentCfg['auto'] = True
 currentCfg['scan_start'] = 0
 currentCfg['scan_length'] = 10
@@ -127,37 +123,46 @@ pub = rospy.Publisher('/ping/raw', pingMessage, queue_size=10)
 # Ping is connected and readable, so we start the dynamic reconfig server 
 srv = Server(PingDriverConfig, reconfigure_cb)
 
-'''
-
-    FUNCTION DEFINITIONS
-
-'''
-currentCfg = {
-    "ping_enabled": False,
-    "ping_frequency": 10, 
-    "speed_of_sound": 1498, 
-    "auto": True,
-    "gain": 0,
-    "scan_start": 0,
-    "scan_length": 10
-}
-
 def initializePingDefaultValues():
+
+    if not myPing.set_ping_enabled(1):
+        rospy.logwarn("Was not able to enable ping.")
+    else: 
+        rospy.loginfo("Enabled ping successfully.")
+        
+    if not myPing.set_ping_interval(currentCfg['ping_interval']):
+        rospy.logwarn("Was not able to set the ping's sampling interval.")
+    else: 
+        rospy.loginfo("Set the ping's sampling interval successfully.")
 
     if not myPing.set_speed_of_sound(currentCfg['speed_of_sound']):
         rospy.logwarn("Was not able to set the ping's speed of sound.")
-
-    if not myPing.set_ping_interval(currentCfg['ping_interval']):
-        rospy.logwarn("Was not able to set the ping's sampling interval.")
+    else: 
+        rospy.loginfo("Set the ping's speed of sound successfully.")
 
     if not myPing.set_mode_auto(True):
         rospy.logwarn("Was not able to set the Ping's sampling mode.")
+    else:
+        rospy.loginfo("Set the ping's sampling mode successfully.")
 
-    if not myPing.set_range( currentCfg['scan_start'] * 1000, currentCfg[scan_length] * 1000):
-        rospy.logwarn("Was not able to set the Ping's range.")
+    # Only try to set the below attributes if we're not on auto mode
+    if (currentCfg['auto'] == 0):
 
-    if not myPing.set_gain_index(currentCfg['gain']):
-        rospy.logwarn("Was not able to set the Ping's gain index.")
+        rospy.loginfo("Ping's mode was manual. Attempting to set range and gain index.")
+        
+        if not myPing.set_range( currentCfg['scan_start'] * 1000, currentCfg[scan_length] * 1000):
+            rospy.logwarn("Was not able to set the Ping's range.")
+        else:
+            rospy.loginfo("Set the ping's range successfully.")
+
+        if not myPing.set_gain_index(currentCfg['gain']):
+            rospy.logwarn("Was not able to set the Ping's gain index.")
+        else:
+            rospy.loginfo("Set the ping's gain index successfully.")
+
+    else: 
+
+        rospy.loginfo("DIdn't set ping range or gain index due to mode being in auto.")
 
 def outputStartupPingValues():
 
@@ -170,6 +175,7 @@ def outputStartupPingValues():
     rospy.loginfo("Gain Index: " + str(myPing.get_general_info()['gain_index']))
     rospy.loginfo("Operating Mode (0 = Manual, 1 = Auto): " + str(myPing.get_general_info()['mode_auto']))
 
+# TODO: Modify this function to get called regardless of overall operation mode (fake or real data) because that's much cleaner to look at and there's some redundant checks in here 
 def setupFakeData():
 
     # Instance of the message so its values can be continually changed then published
@@ -179,7 +185,6 @@ def setupFakeData():
     global cachedFakeDistance
     global cachedFakeConfidence
 
-    # Todo - Make both the server and listener only happen if the bool is set to the correct value (I would do this, but I'm having issues getting the variable scope right)
     # Sets up a server that's basically publishing fake data just incase we need it
     if readingFromFakeStream:
 
@@ -214,8 +219,6 @@ def setupFakeData():
 
         # If distance data this time around is valid 
         if distanceData is not None:
-
-            print("distanceData: " + str(distanceData))
 
             # Raw Data is in millimeters, data published to our topic should be in meters
             ping_msg.distance = distanceData['distance']
