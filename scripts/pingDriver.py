@@ -29,7 +29,7 @@ from serial import Serial # Allows us to simulate fake data on a specific serial
 # Tracks whether we're reading from a fake stream or from the real ping 
 # Ideally, you can change only this value and the entire class's behavior will responsively change 
 # TODO: Make this a launch file 
-readingFromFakeStream = False
+readingFromFakeStream = True
 
 # Used to communicate across threads
 # # This is NOT thread safe, but doesn't need to be 
