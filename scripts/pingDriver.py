@@ -2,11 +2,14 @@
 
 # Adding certain modules to PYTHONPATH so that they can be correctly imported directly afterward
 import sys, os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/msg")
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/packages")
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/cfg")
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + "/msg")
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+
+for path in sys.path:
+    print(path)
 # Imports
 from brping import Ping1D # Imports Blue Robotics's Python library for interfacing with the Ping 
 import rospy # Python version of ROS 
