@@ -1,7 +1,6 @@
 # Establishes the minimum version of cmake needed to parse it in  
 cmake_minimum_required(VERSION 2.8.3)
 project(ping_driver)
-
 # Finding other CMake / Catkin packages needed to build the current one 
 find_package(catkin REQUIRED
     COMPONENTS
@@ -12,6 +11,7 @@ find_package(catkin REQUIRED
     message_generation
     dynamic_reconfigure
 )
+catkin_python_setup()
 
 generate_dynamic_reconfigure_options(cfg/PingDriver.cfg)
 
@@ -25,6 +25,7 @@ add_message_files (
 )
 
 generate_messages()
+
 
 
 
